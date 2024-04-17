@@ -25,7 +25,7 @@ class calib:
     
     def add_med(self,name):
         elementos=['137Cs','133Ba','22Na','207Bi','60Co','57Co','241Am','152Eu']
-        energias=[661.66,383.86,1274.5,1063.63,1332.51,136.47,59.54,1457.63]
+        energias=[661.66,383.86,383.86,569.15,1332.51,136.47,59.54,1457.63]
         if name[:name.find('_')] in elementos:
             E=energias[elementos.index(name[:name.find('_')])]
             cond=1
@@ -33,10 +33,10 @@ class calib:
             print('No hay datos de energia para el elemento '+name)
             cond=0
         if cond==1:
-            time0,picos0=np.loadtxt('Practica 1\\'+name+'_resultados.txt', skiprows=1, unpack=True, delimiter=',')
+            time0,picos0=np.loadtxt(name+'_resultados.txt', skiprows=1, unpack=True, delimiter=',')
             plt.figure()
             spec=plt.hist(picos0, bins=1000, histtype='step',label = name)
-            ind_peaks, _ = find_peaks(spec[0], height = 200, width = 0, distance = 80, prominence=np.max(spec[0])/6000)
+            ind_peaks, _ = find_peaks(spec[0], height = 200, width = 0, distance = 80, prominence=900)
             print('Picos econtrados [V]:')
             print(spec[1][ind_peaks])
             ind_entorno_fotopico=np.where(np.abs(spec[1]-spec[1][np.max(ind_peaks)])<0.025*np.max(spec[1]))[0]
@@ -117,7 +117,7 @@ class Med:
         self.peaks=[]
 
     def add_med(self, name):
-        time0,picos0=np.loadtxt('Practica 1\\'+name+'_resultados.txt', skiprows=1, unpack=True, delimiter=',')
+        time0,picos0=np.loadtxt(name+'_resultados.txt', skiprows=1, unpack=True, delimiter=',')
         picos0=picos0*self.pendiente+self.offset
         spec=plt.hist(picos0, bins=1000, histtype='step',label = name)
         ind_peaks, _ = find_peaks(spec[0], height = 200, width = 0, distance = 25, prominence=np.max(spec[0])/10)
@@ -151,13 +151,13 @@ indexs_fotopico_k=np.where(np.abs(k/100-spec[1][np.max(ind_peaks)]+0.01)<0.04*np
 '''
 
 cal=calib()
-cal.add_med('137Cs_1')
-cal.add_med('133Ba_1')
+cal.add_med('137Cs_2T')
+cal.add_med('133Ba_2')
 cal.add_med('207Bi_1')
 cal.plot_cal()
 medicion=Med(cal.pendiente,cal.offset)
-medicion.add_med('137Cs_1')
-medicion.add_med('133Ba_1')
+medicion.add_med('137Cs_2T')
+medicion.add_med('133Ba_2')
 medicion.add_med('34Es_1')
 medicion.add_med('207Bi_1')
 medicion.plot_med()
