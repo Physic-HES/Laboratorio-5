@@ -33,7 +33,7 @@ class calib:
             print('No hay datos de energia para el elemento '+name)
             cond=0
         if cond==1:
-            time0,picos0=np.loadtxt(name+'_resultados.txt', skiprows=1, unpack=True, delimiter=',')
+            time0,picos0=np.loadtxt('Practica 1\\'+name+'_resultados.txt', skiprows=1, unpack=True, delimiter=',')
             plt.figure()
             spec=plt.hist(picos0, bins=1000, histtype='step',label = name)
             ind_peaks, _ = find_peaks(spec[0], height = 200, width = 0, distance = 80, prominence=900)
@@ -117,7 +117,7 @@ class Med:
         self.peaks=[]
 
     def add_med(self, name):
-        time0,picos0=np.loadtxt(name+'_resultados.txt', skiprows=1, unpack=True, delimiter=',')
+        time0,picos0=np.loadtxt('Practica 1\\'+name+'_resultados.txt', skiprows=1, unpack=True, delimiter=',')
         picos0=picos0*self.pendiente+self.offset
         spec=plt.hist(picos0, bins=1000, histtype='step',label = name)
         ind_peaks, _ = find_peaks(spec[0], height = 200, width = 0, distance = 25, prominence=np.max(spec[0])/10)
@@ -141,23 +141,76 @@ class Med:
         plt.yscale("log")
         plt.show()
 
+class Stat_gamma:
+    def __init__(self):
+        self.hist=[]
+        self.ajustes=[]
+        self.media_sigma=[]
+        self.etiquetas=[]
 
+    def add_med(self,name):
+        eventos=np.loadtxt('Practica 1\\'+name+'_resultados_eventos.txt', skiprows=1, unpack=True, delimiter=',')
+        lambda_ = np.mean(eventos) 
+        k = np.arange(0, np.max(eventos))
+        pmf_poisson = poisson.pmf(k, lambda_)
+        spec=plt.hist(eventos, bins=22, histtype='stepfilled',density=True,alpha=0.5,label = name)
+        ajuste=plt.plot(k,pmf_poisson)
+        self.hist.append(spec)
+        self.ajustes.append(ajuste)
+        self.media_sigma.append([lambda_,np.std(eventos)**2])
+        self.etiquetas.append([name])
 
-'''DISTBUCIN DE POISSON
-lambda_ = np.mean(picos0[ind_entorno_fotopico])*100 
-k = np.arange(0, np.floor(np.max(picos0))*100)
-pmf_poisson = poisson.pmf(k, lambda_)*len(ind_entorno_fotopico)
-indexs_fotopico_k=np.where(np.abs(k/100-spec[1][np.max(ind_peaks)]+0.01)<0.04*np.max(spec[1]))[0]
-'''
+    def plot_med(self):
+        plt.title('Distribuciones de Poisson para distintas ventanas de tiempo')
+        plt.xlabel('Eventos')
+        plt.ylabel('Cuentas Normalizadas')
+        plt.legend()
+        plt.xlim([0,1600])
+        if len(self.hist)>1:
+            p=np.polyfit(np.array(self.media_sigma)[:,0],np.array(self.media_sigma)[:,1],1)
+            popt,pcov=curve_fit(lineal,np.array(self.media_sigma)[:,0],np.array(self.media_sigma)[:,1],p0=[p[0],p[1]])
+            self.popterr=np.sqrt(np.diag(pcov))
+            self.offset=popt[1]
+            self.pendiente=popt[0]
+            self.R2=np.corrcoef(np.array(self.media_sigma)[:,1],self.offset+self.pendiente*np.array(self.media_sigma)[:,0])[0][1]**2
+            self.std=np.std(np.array(self.media_sigma)[:,1]-(self.offset+self.pendiente*np.array(self.media_sigma)[:,0]))
+            mk=['^','s','*','d','p']
+            plt.figure()
+            plt.plot(np.array(self.media_sigma)[:,0],self.offset+self.pendiente*np.array(self.media_sigma)[:,0],
+                     label=f'$\sigma^2$={self.pendiente:1.4}$<n>${self.offset:2.4}\n $R^2$={self.R2:1.5}')
+            print(self.pendiente)
+            plt.fill_between(np.array(self.media_sigma)[:,0],self.offset+self.pendiente*np.array(self.media_sigma)[:,0]+2*self.std,
+                             self.offset+self.pendiente*np.array(self.media_sigma)[:,0]-2*self.std,alpha=0.25,label='$2\sigma$')
+            for j in range(len(self.hist)):
+                plt.plot(self.media_sigma[j][0],self.media_sigma[j][1],marker=mk[j],label=f'$\Delta t$={0.25+j*0.25}')
+            plt.xlabel('$<n>$')
+            plt.ylabel('$\sigma^2$')
+            plt.legend()
+            print('RESULTADOS DE CALIBRACIÓN:')
+            print(f'Pendiente = {self.pendiente:0.5}+-{self.popterr[0]:0.5}')
+            print(f'Offset = {self.offset:0.5}+-{self.popterr[1]:0.5}')
+            print(f'R^2 = {self.R2:1.5}')
+            print(f'sigma = {self.std:0.5}')
+        plt.show()
+
 
 cal=calib()
 cal.add_med('137Cs_2T')
 cal.add_med('133Ba_2')
 cal.add_med('207Bi_1')
 cal.plot_cal()
+
 medicion=Med(cal.pendiente,cal.offset)
 medicion.add_med('137Cs_2T')
 medicion.add_med('133Ba_2')
 medicion.add_med('34Es_1')
 medicion.add_med('207Bi_1')
 medicion.plot_med()
+
+estad=Stat_gamma()
+estad.add_med('137Cs_025s')
+estad.add_med('137Cs_2T')
+estad.add_med('137Cs_075sT')
+estad.add_med('137Cs_1s')
+estad.add_med('137Cs_125s')
+estad.plot_med()
