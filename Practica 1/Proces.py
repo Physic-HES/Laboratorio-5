@@ -241,6 +241,21 @@ class Stat_gamma:
         plt.show()
 
 
+class compton:
+    def __init__(self):
+        self.Egamma=[]
+        self.borde=[]
+        self.backscater=[]
+
+    def add_med(self,Egamma,T):
+        self.Egamma.append(Egamma)
+        self.borde.append(T)
+        self.backscater.append(Egamma-T)
+        if len(self.borde)>1:
+            for j in range(len(self.borde)):
+                plt.plot(self.borde[j],self.Egamma[j])
+        print('listo')
+
 cal=calib()
 cal.add_med('137Cs_2T')
 cal.add_med('133Ba_2')
@@ -261,3 +276,6 @@ estad.add_med('137Cs_075sT')
 estad.add_med('137Cs_1s')
 estad.add_med('137Cs_125s')
 estad.plot_med()
+
+comp=compton()
+
