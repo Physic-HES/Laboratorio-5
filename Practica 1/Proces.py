@@ -58,6 +58,7 @@ class calib:
                     popterr = np.sqrt(np.diag(pcov))
                     print('Centro de la gaussiana')
                     print(f'a: {popt[0]:.3}+-{popterr[0]:.3}')
+                    print(f'R^2={np.corrcoef(spec[0][ind_entorno],Gaussian(spec[1][ind_entorno],popt[0],popt[1],popt[2],popt[3]))[0][1]**2:0.5}')
                     xteo=np.linspace(np.min(spec[1][ind_entorno]),np.max(spec[1][ind_entorno]),200)
                     yteo=Gaussian(xteo,popt[0],popt[1],popt[2],popt[3])
                     
@@ -79,6 +80,7 @@ class calib:
                 popterr = np.sqrt(np.diag(pcov))
                 print('Centro de la gaussiana')
                 print(f'a: {popt[0]:.3}+-{popterr[0]:.3}')
+                print(f'R^2={np.corrcoef(spec[0][ind_entorno],Gaussian(spec[1][ind_entorno],popt[0],popt[1],popt[2],popt[3]))[0][1]**2:0.5}')
                 xteo=np.linspace(np.min(spec[1][ind_entorno]),np.max(spec[1][ind_entorno]),200)
                 yteo=Gaussian(xteo,popt[0],popt[1],popt[2],popt[3])
                 
@@ -88,8 +90,7 @@ class calib:
                 self.calib_ajustes.append(np.c_[xteo,yteo])
                 self.calib_etiq_ajustes.append('Ajuste Gaussiano para '+name)
                 self.calibrar()
-            plt.title('Ajuste Distribución Gaussiana')
-            plt.xlabel('Valor máximo de tensión [V]')
+            plt.xlabel('Canales de energía [V]')
             plt.ylabel('Cuentas')
             plt.xlim([0,np.max(picos0)])
             plt.legend()
@@ -110,7 +111,7 @@ class calib:
             self.std=np.std(self.tab['E [keV]'].values-(self.offset+self.pendiente*self.tab['Voltaje [V]'].values))
             print('RESULTADOS DE CALIBRACIÓN:')
             print(f'Pendiente = {self.pendiente:0.5}+-{self.popterr[0]:0.5} keV/V')
-            print(f'Offset = {self.offset:0.5}+-{self.popterr[1]:0.5} keV/V')
+            print(f'Offset = {self.offset:0.5}+-{self.popterr[1]:0.5} keV')
             print(f'R^2 = {self.R2:1.5}')
             print(f'sigma = {self.std:0.5} keV')
         else:
@@ -174,7 +175,6 @@ class Med:
         elif name=='133Ba_2':
             plt.text(spec[1][ind_peaks[-1]],spec[0][ind_peaks[-1]]+1000,'Fotopico')
         plt.xlim([0,np.max(picos0)])
-        plt.title('Espectro de emisiones $\gamma$')
         if not self.pendiente==1:
             plt.xlabel('Energia [keV]')
         else:
@@ -209,7 +209,6 @@ class Stat_gamma:
         self.etiquetas.append([name])
 
     def plot_med(self):
-        plt.title('Distribuciones de Poisson para $^{137}Cs$ con distintas ventanas de tiempo')
         plt.xlabel('Eventos')
         plt.ylabel('Cuentas Normalizadas')
         plt.legend()
