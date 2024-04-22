@@ -256,6 +256,13 @@ class compton:
                 plt.plot(self.borde[j],self.Egamma[j])
         print('listo')
 
+    def masa_e(self,Egamma,T):
+        print(' ')
+        print(f'E_gamma: {Egamma/1000} [MeV]')
+        print(f'T: {T/1000} [MeV]')
+        print(f'Masa del electrón No Relativista: {(2*Egamma-T)**2/(2*T)/1000} [MeV]')
+        print(f'Masa del electrón Relativista: {2*Egamma*(Egamma-T)/T/1000} [MeV]') 
+
 cal=calib()
 cal.add_med('137Cs_2T')
 cal.add_med('133Ba_2')
@@ -268,7 +275,7 @@ medicion.add_med('133Ba_2')
 medicion.add_med('34Es_1')
 medicion.add_med('207Bi_1')
 medicion.plot_med()
-
+'''
 estad=Stat_gamma()
 estad.add_med('137Cs_025s')
 estad.add_med('137Cs_2T')
@@ -276,6 +283,7 @@ estad.add_med('137Cs_075sT')
 estad.add_med('137Cs_1s')
 estad.add_med('137Cs_125s')
 estad.plot_med()
-
+'''
 comp=compton()
-
+comp.masa_e(medicion.Egamma_p[0],medicion.T[0]*1.09)
+comp.masa_e(medicion.Egamma_p[3],medicion.T[3]*1.09)
