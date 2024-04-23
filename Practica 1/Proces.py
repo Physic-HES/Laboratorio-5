@@ -67,7 +67,7 @@ class calib:
                     self.tab=pd.concat([self.tab,raw], ignore_index=True)
                     self.calib_ajustes.append(np.c_[xteo,yteo])
                     self.calib_etiq_ajustes.append('Ajuste Gaussiano para '+name)
-                    self.calibrar()
+                    self.calibrar(320E-6)
             else:
                 ind_entorno=np.where(np.abs(spec[1]-spec[1][np.max(ind_peaks)])<0.05*spec[1][np.max(ind_peaks)])[0]
                 
@@ -89,7 +89,7 @@ class calib:
                 self.tab=pd.concat([self.tab,raw], ignore_index=True)
                 self.calib_ajustes.append(np.c_[xteo,yteo])
                 self.calib_etiq_ajustes.append('Ajuste Gaussiano para '+name)
-                self.calibrar()
+                self.calibrar(320E-6)
             plt.xlabel('Canales de energía [V]')
             plt.ylabel('Cuentas')
             plt.xlim([0,np.max(picos0)])
@@ -99,7 +99,7 @@ class calib:
                 plt.ylim([1E3,1E5])
             plt.show()
 
-    def calibrar(self):
+    def calibrar(self,error_V):
         med_cal=len(self.tab['Voltaje [V]'].values)
         if med_cal>2:
             p=np.polyfit(self.tab['Voltaje [V]'].values,self.tab['E [keV]'].values,1)
@@ -107,6 +107,7 @@ class calib:
             self.popterr=np.sqrt(np.diag(pcov))
             self.offset=popt[1]
             self.pendiente=popt[0]
+            self.error_V=error_V
             self.R2=np.corrcoef(self.tab['E [keV]'].values,self.offset+self.pendiente*self.tab['Voltaje [V]'].values)[0][1]**2
             self.std=np.std(self.tab['E [keV]'].values-(self.offset+self.pendiente*self.tab['Voltaje [V]'].values))
             print('RESULTADOS DE CALIBRACIÓN:')
@@ -142,9 +143,12 @@ class calib:
             plt.show()
 
 class Med:
-    def __init__(self,m,b):
+    def __init__(self,m,b,Dm,Db,error_V):
         self.pendiente=m
+        self.Dm=Dm
         self.offset=b
+        self.Db=Db
+        self.error_V=error_V
         self.curvas=[]
         self.tam=[]
         self.etiquetas=[]
@@ -155,6 +159,7 @@ class Med:
     def add_med(self, name):
         plt.figure()
         time0,picos0=np.loadtxt('Practica 1\\'+name+'_resultados.txt', skiprows=1, unpack=True, delimiter=',')
+        Delta_picos0=np.sqrt(picos0**2*self.Dm**2+self.pendiente**2*self.error_V**2+self.Db**2)
         picos0=picos0*self.pendiente+self.offset
         if name=='34Es_1':
             spec=plt.hist(picos0, bins=1000, histtype='stepfilled',alpha=0.25,label = f'$^{{{name[0:2]}}}{name[2:4]}$')
@@ -167,8 +172,8 @@ class Med:
         self.tam.append(len(picos0))
         self.etiquetas.append(name[:name.find('_')])
         self.peaks.append(ind_peaks)
-        self.Egamma_p.append(spec[1][ind_peaks[-1]])
-        self.T.append(spec[1][ind_peaks[-2]])
+        self.Egamma_p.append([spec[1][ind_peaks[-1]],Delta_picos0[np.argmin(np.abs(picos0-spec[1][ind_peaks[-1]]))]])
+        self.T.append([spec[1][ind_peaks[-2]],Delta_picos0[np.argmin(np.abs(picos0-spec[1][ind_peaks[-2]]))]])
         if (name=='137Cs_2T' or name=='207Bi_1'):
             plt.text(spec[1][ind_peaks[-1]],spec[0][ind_peaks[-1]]+1000,'Fotopico',horizontalalignment='center')
             plt.text(spec[1][ind_peaks[-2]],spec[0][ind_peaks[-2]]+500,'Borde Compton')
@@ -257,11 +262,14 @@ class compton:
         print('listo')
 
     def masa_e(self,Egamma,T):
+        T[0]=T[0]*1.09
         print(' ')
-        print(f'E_gamma: {Egamma/1000} [MeV]')
-        print(f'T: {T/1000} [MeV]')
-        print(f'Masa del electrón No Relativista: {(2*Egamma-T)**2/(2*T)/1000} [MeV]')
-        print(f'Masa del electrón Relativista: {2*Egamma*(Egamma-T)/T/1000} [MeV]') 
+        print(f'E_gamma: {Egamma[0]/1000}+-{Egamma[1]/1000} [MeV]')
+        print(f'T: {T[0]/1000}+-{T[1]/1000} [MeV]')
+        deltaMNR=np.sqrt((2*(2*Egamma[0]-T[0])/T[0])**2*(Egamma[1])**2+((2*Egamma[0]-T[0])/T[0]-((2*Egamma[0]-T[0])/(2*T[0]))**2)**2*(T[1])**2)
+        deltaMR=np.sqrt(((4*Egamma[0]-2*T[0])/T[0])**2*(Egamma[1])**2+(-2*Egamma[0]/T[0]-2*Egamma[0]*(Egamma[0]-T[0])/T[0]**2)**2*(T[1])**2)
+        print(f'Masa del electrón No Relativista: {(2*Egamma[0]-T[0])**2/(2*T[0])/1000}+-{deltaMNR/1000/2} [MeV]')
+        print(f'Masa del electrón Relativista: {2*Egamma[0]*(Egamma[0]-T[0])/T[0]/1000}+-{deltaMR/1000/2} [MeV]') 
 
 cal=calib()
 cal.add_med('137Cs_2T')
@@ -269,7 +277,7 @@ cal.add_med('133Ba_2')
 cal.add_med('207Bi_1')
 cal.plot_cal()
 
-medicion=Med(cal.pendiente,cal.offset)
+medicion=Med(cal.pendiente,cal.offset,cal.popterr[0],cal.popterr[1],cal.error_V)
 medicion.add_med('137Cs_2T')
 medicion.add_med('133Ba_2')
 medicion.add_med('34Es_1')
@@ -285,5 +293,5 @@ estad.add_med('137Cs_125s')
 estad.plot_med()
 '''
 comp=compton()
-comp.masa_e(medicion.Egamma_p[0],medicion.T[0]*1.09)
-comp.masa_e(medicion.Egamma_p[3],medicion.T[3]*1.09)
+comp.masa_e(medicion.Egamma_p[0],medicion.T[0])
+comp.masa_e(medicion.Egamma_p[3],medicion.T[3])
