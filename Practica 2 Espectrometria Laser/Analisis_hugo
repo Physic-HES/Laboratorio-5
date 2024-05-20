@@ -1,0 +1,116 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from itertools import combinations
+
+folder='C:\\Users\\user\\Documents\\Fisica\\L5\\Laboratorio-5\\Practica 2 Espectrometria Laser\\dia 1\\'
+
+
+# ESTRUCTURA FINA Rubidio 87
+
+# Transiciones 87Rb para el fundamental 5^2S_{1/2} --> 5^2P_{3/2} [MHz]
+Saltos_87Rb_aP3_2 = []
+Saltos_87Rb_aP3_2.append(384230484.4685) # 5^2S_{1/2} --> 5^2P_{3/2} FUNDAMENTAL
+Saltos_87Rb_aP3_2.append(6834.682610904290) #F1_2 5^2S_{1/2}
+
+Saltos_87Rb_aP3_2.append(Saltos_87Rb_aP3_2[0]-(2563.005979089109+302.0738)) #F2_F1 (5^2S_{1/2}-->5^2P_{3/2})
+
+Saltos_87Rb_aP3_2.append(72.2180) #F0_1
+Saltos_87Rb_aP3_2.append(156.9470) #F1_2
+Saltos_87Rb_aP3_2.append(266.65) #F2_3
+
+# Saltos de transicion entre niveles F de 5^2S_{1/2} --> 5^2P_{3/2}
+Saltos_87Rb_aP3_2.append(np.sum(np.array(Saltos_87Rb_aP3_2[1:3])))
+Saltos_87Rb_aP3_2.append(np.sum(np.array(Saltos_87Rb_aP3_2[1:4])))
+Saltos_87Rb_aP3_2.append(np.sum(np.array(Saltos_87Rb_aP3_2[1:5])))
+Saltos_87Rb_aP3_2.append(np.sum(np.array(Saltos_87Rb_aP3_2[1:6])))
+Saltos_87Rb_aP3_2.append(np.sum(np.array(Saltos_87Rb_aP3_2[2:4])))
+Saltos_87Rb_aP3_2.append(np.sum(np.array(Saltos_87Rb_aP3_2[2:5])))
+Saltos_87Rb_aP3_2.append(np.sum(np.array(Saltos_87Rb_aP3_2[2:6])))
+Saltos_87Rb_aP3_2.append(np.sum(np.array(Saltos_87Rb_aP3_2[3:5])))
+Saltos_87Rb_aP3_2.append(np.sum(np.array(Saltos_87Rb_aP3_2[3:6])))
+Saltos_87Rb_aP3_2.append(np.sum(np.array(Saltos_87Rb_aP3_2[4:6])))
+
+print(Saltos_87Rb_aP3_2)
+
+# Transiciones 87Rb para el fundamental 5^2S_{1/2} --> 5^2P_{1/2} [MHz]
+Saltos_87Rb_aP1_2 = []
+Saltos_87Rb_aP1_2.append(377107463.380) # 5^2S_{1/2} --> 5^2P_{1/2} FUNDAMENTAL
+Saltos_87Rb_aP1_2.append(6834.682610904290) #F1_2 5^2S_{1/2}
+
+Saltos_87Rb_aP1_2.append(Saltos_87Rb_aP1_2[0]-(2563.005979089109+509.06)) #F2_F1 (5^2S_{1/2}-->5^2P_{1/2})
+
+Saltos_87Rb_aP1_2.append(814.5) #F1_2 5^2P_{1/2}
+
+# Saltos de transicion entre niveles F de 5^2S_{1/2} --> 5^2P_{1/2}
+Saltos_87Rb_aP1_2.append(np.sum(np.array(Saltos_87Rb_aP1_2[1:3]))) 
+Saltos_87Rb_aP1_2.append(np.sum(np.array(Saltos_87Rb_aP1_2[1:4])))
+Saltos_87Rb_aP1_2.append(np.sum(np.array(Saltos_87Rb_aP1_2[2:4])))
+
+
+# ESTRUCTURA FINA Rubidio 85
+
+# Transiciones 85Rb para el fundamental 5^2S_{1/2} --> 5^2P_{3/2} [MHz]
+Saltos_85Rb_aP3_2 = []
+Saltos_85Rb_aP3_2.append(384230406.373) # 5^2S_{1/2} --> 5^2P_{3/2} FUNDAMENTAL
+Saltos_85Rb_aP3_2.append(3035.7324390) #F2_3 5^2S_{1/2}
+
+Saltos_85Rb_aP3_2.append(Saltos_85Rb_aP3_2[0]-(1264.8885163+113.208)) #F3_F1 (5^2S_{1/2}-->5^2P_{3/2})
+
+Saltos_85Rb_aP3_2.append(29.372) #F1_2
+Saltos_85Rb_aP3_2.append(63.401) #F2_3
+Saltos_85Rb_aP3_2.append(120.640) #F3_4
+
+# Saltos de transicion entre niveles F de 5^2S_{1/2} --> 5^2P_{3/2}
+Saltos_85Rb_aP3_2.append(np.sum(np.array(Saltos_85Rb_aP3_2[1:3]))) 
+Saltos_85Rb_aP3_2.append(np.sum(np.array(Saltos_85Rb_aP3_2[1:4])))
+Saltos_85Rb_aP3_2.append(np.sum(np.array(Saltos_85Rb_aP3_2[1:5])))
+Saltos_85Rb_aP3_2.append(np.sum(np.array(Saltos_85Rb_aP3_2[1:6])))
+Saltos_85Rb_aP3_2.append(np.sum(np.array(Saltos_85Rb_aP3_2[2:4])))
+Saltos_85Rb_aP3_2.append(np.sum(np.array(Saltos_85Rb_aP3_2[2:5])))
+Saltos_85Rb_aP3_2.append(np.sum(np.array(Saltos_85Rb_aP3_2[2:6])))
+Saltos_85Rb_aP3_2.append(np.sum(np.array(Saltos_85Rb_aP3_2[3:5])))
+Saltos_85Rb_aP3_2.append(np.sum(np.array(Saltos_85Rb_aP3_2[3:6])))
+Saltos_85Rb_aP3_2.append(np.sum(np.array(Saltos_85Rb_aP3_2[4:6])))
+
+# Transiciones 85Rb para el fundamental 5^2S_{1/2} --> 5^2P_{1/2} [MHz]
+Saltos_85Rb_aP1_2 = []
+Saltos_85Rb_aP1_2.append(377107385.690) # 5^2S_{1/2} --> 5^2P_{1/2} FUNDAMENTAL
+Saltos_85Rb_aP1_2.append(3035.7324390) #F2_3 5^2S_{1/2}
+
+Saltos_85Rb_aP1_2.append(Saltos_85Rb_aP1_2[0]-(1264.8885163+210.923)) #F3_F2 (5^2S_{1/2}-->5^2P_{1/2})
+
+Saltos_85Rb_aP1_2.append(361.58) #F2_3 5^2P_{1/2}
+
+# Saltos de transicion entre niveles F de 5^2S_{1/2} --> 5^2P_{1/2}
+Saltos_85Rb_aP1_2.append(np.sum(np.array(Saltos_85Rb_aP1_2[1:3])))
+Saltos_85Rb_aP1_2.append(np.sum(np.array(Saltos_85Rb_aP1_2[1:4])))
+Saltos_85Rb_aP1_2.append(np.sum(np.array(Saltos_85Rb_aP1_2[2:4])))
+
+# Eliminacion de transiciones en THz
+Saltos_87Rb_aP1_2=np.array(Saltos_87Rb_aP1_2)[np.array(Saltos_87Rb_aP1_2)>50000]/1000000
+Saltos_87Rb_aP3_2=np.array(Saltos_87Rb_aP3_2)[np.array(Saltos_87Rb_aP3_2)>50000]/1000000
+Saltos_85Rb_aP1_2=np.array(Saltos_85Rb_aP1_2)[np.array(Saltos_85Rb_aP1_2)>50000]/1000000
+Saltos_85Rb_aP3_2=np.array(Saltos_85Rb_aP3_2)[np.array(Saltos_85Rb_aP3_2)>50000]/1000000
+
+unos_aP1_2=np.ones(len(Saltos_85Rb_aP1_2))
+unos_aP3_2=np.ones(len(Saltos_85Rb_aP3_2))
+
+plt.figure()
+plt.title(r'$D_1$ Line [$5^2S_{1/2} \rightarrow 5^2P_{1/2}$] of $^{87}$Rb and $^{85}$Rb')
+#plt.plot(Saltos_85Rb_aP1_2[0],unos_aP1_2[0],'or',markersize=5)
+plt.plot(Saltos_85Rb_aP1_2[1:],unos_aP1_2[1:],'^r',label=r'$^{85}$Rb [72.17%]',markersize=4)
+#plt.plot(Saltos_87Rb_aP1_2[0],unos_aP1_2[0],'og',markersize=5)
+plt.plot(Saltos_87Rb_aP1_2[1:],unos_aP1_2[1:],'^g',label=r'$^{87}$Rb [27.83%]',markersize=4)
+plt.xlabel(r'$E/h$ [THz]')
+plt.legend()
+
+plt.figure()
+plt.title(r'$D_2$ Line [$5^2S_{1/2} \rightarrow 5^2P_{3/2}$] of $^{87}$Rb and $^{85}$Rb')
+#plt.plot(Saltos_85Rb_aP3_2[0],unos_aP3_2[0],'or',markersize=5)
+plt.plot(Saltos_85Rb_aP3_2[1:],unos_aP3_2[1:],'^r',label=r'$^{85}$Rb [72.17%]',markersize=4)
+#plt.plot(Saltos_87Rb_aP3_2[0],unos_aP3_2[0],'og',markersize=5)
+plt.plot(Saltos_87Rb_aP3_2[1:],unos_aP3_2[1:],'^g',label=r'$^{87}$Rb [27.83%]',markersize=4)
+plt.xlabel(r'$E/h$ [THz]')
+plt.legend()
+
+plt.show()
