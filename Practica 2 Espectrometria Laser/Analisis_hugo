@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from itertools import combinations
+from sklearn.cluster import KMeans
+from scipy.signal import find_peaks
+from scipy.optimize import curve_fit
 
 folder='C:\\Users\\user\\Documents\\Fisica\\L5\\Laboratorio-5\\Practica 2 Espectrometria Laser\\dia 1\\'
 
@@ -30,7 +32,6 @@ Saltos_87Rb_aP3_2.append(np.sum(np.array(Saltos_87Rb_aP3_2[3:5])))
 Saltos_87Rb_aP3_2.append(np.sum(np.array(Saltos_87Rb_aP3_2[3:6])))
 Saltos_87Rb_aP3_2.append(np.sum(np.array(Saltos_87Rb_aP3_2[4:6])))
 
-print(Saltos_87Rb_aP3_2)
 
 # Transiciones 87Rb para el fundamental 5^2S_{1/2} --> 5^2P_{1/2} [MHz]
 Saltos_87Rb_aP1_2 = []
@@ -92,25 +93,104 @@ Saltos_87Rb_aP3_2=np.array(Saltos_87Rb_aP3_2)[np.array(Saltos_87Rb_aP3_2)>50000]
 Saltos_85Rb_aP1_2=np.array(Saltos_85Rb_aP1_2)[np.array(Saltos_85Rb_aP1_2)>50000]/1000000
 Saltos_85Rb_aP3_2=np.array(Saltos_85Rb_aP3_2)[np.array(Saltos_85Rb_aP3_2)>50000]/1000000
 
-unos_aP1_2=np.ones(len(Saltos_85Rb_aP1_2))
-unos_aP3_2=np.ones(len(Saltos_85Rb_aP3_2))
+zeros_aP1_2=np.zeros(len(Saltos_85Rb_aP1_2))
+zeros_aP3_2=np.zeros(len(Saltos_85Rb_aP3_2))
 
 plt.figure()
 plt.title(r'$D_1$ Line [$5^2S_{1/2} \rightarrow 5^2P_{1/2}$] of $^{87}$Rb and $^{85}$Rb')
 #plt.plot(Saltos_85Rb_aP1_2[0],unos_aP1_2[0],'or',markersize=5)
-plt.plot(Saltos_85Rb_aP1_2[1:],unos_aP1_2[1:],'^r',label=r'$^{85}$Rb [72.17%]',markersize=4)
+plt.plot(Saltos_85Rb_aP1_2[1:],zeros_aP1_2[1:],'^r',label=r'$^{85}$Rb [72.17%]',markersize=4)
 #plt.plot(Saltos_87Rb_aP1_2[0],unos_aP1_2[0],'og',markersize=5)
-plt.plot(Saltos_87Rb_aP1_2[1:],unos_aP1_2[1:],'^g',label=r'$^{87}$Rb [27.83%]',markersize=4)
+plt.plot(Saltos_87Rb_aP1_2[1:],zeros_aP1_2[1:],'^g',label=r'$^{87}$Rb [27.83%]',markersize=4)
 plt.xlabel(r'$E/h$ [THz]')
 plt.legend()
 
 plt.figure()
 plt.title(r'$D_2$ Line [$5^2S_{1/2} \rightarrow 5^2P_{3/2}$] of $^{87}$Rb and $^{85}$Rb')
 #plt.plot(Saltos_85Rb_aP3_2[0],unos_aP3_2[0],'or',markersize=5)
-plt.plot(Saltos_85Rb_aP3_2[1:],unos_aP3_2[1:],'^r',label=r'$^{85}$Rb [72.17%]',markersize=4)
+plt.plot(Saltos_85Rb_aP3_2[1:],zeros_aP3_2[1:],'^r',label=r'$^{85}$Rb [72.17%]',markersize=4)
 #plt.plot(Saltos_87Rb_aP3_2[0],unos_aP3_2[0],'og',markersize=5)
-plt.plot(Saltos_87Rb_aP3_2[1:],unos_aP3_2[1:],'^g',label=r'$^{87}$Rb [27.83%]',markersize=4)
+plt.plot(Saltos_87Rb_aP3_2[1:],zeros_aP3_2[1:],'^g',label=r'$^{87}$Rb [27.83%]',markersize=4)
 plt.xlabel(r'$E/h$ [THz]')
 plt.legend()
+
+# DATOS
+tiempo3,datos3=np.genfromtxt(folder+'Captura_2_filtrada.txt',delimiter=',',skip_header=1,unpack=True)
+
+
+# Defino una funcion para gaussiana para ajustar los picos de cada variedad
+def varied_gauss(x,ancho1,ancho2,ancho3,ancho4,c1,c2,c3,c4,a1,a2,a3,a4):
+    fun = -0.0002+a1*np.exp(-1/2*((x-c1)/(ancho1))**2)+a2*np.exp(-1/2*((x-c2)/(ancho2))**2)+a3*np.exp(-1/2*((x-c3)/(ancho3))**2)+a4*np.exp(-1/2*((x-c4)/(ancho4))**2)
+    return fun
+
+# Candidatos de ajuste por busqueda de picos en los datos:
+peaks_ind=find_peaks(-datos3,height=0.002,distance=150)[0]
+
+# Ajuste de los datos con varied_gauss
+popt,pcov=curve_fit(varied_gauss,tiempo3,datos3,p0=[0.0001,0.0001,0.0001,0.0001,
+                                               tiempo3[peaks_ind[0]],
+                                               tiempo3[peaks_ind[1]],
+                                               tiempo3[peaks_ind[2]],
+                                               tiempo3[peaks_ind[3]],
+                                               datos3[peaks_ind[0]],
+                                               datos3[peaks_ind[1]],
+                                               datos3[peaks_ind[2]],
+                                               datos3[peaks_ind[3]]])
+perr=np.sqrt(np.diag(pcov))
+
+D2 = np.concatenate((Saltos_85Rb_aP3_2[1:],Saltos_87Rb_aP3_2[1:]))
+# Encuentro centroides de los 4 picos con un Clastering K-Means
+k_means = KMeans(n_clusters=4).fit(np.c_[D2,np.ones(len(D2))])
+centros = k_means.cluster_centers_
+centros = sorted(centros[:,0],reverse=True)
+print(centros)
+
+plt.figure()
+plt.plot(tiempo3,datos3)
+plt.plot(tiempo3[peaks_ind],datos3[peaks_ind],'.')
+plt.plot(tiempo3,varied_gauss(tiempo3,  popt[0], popt[1], popt[2], popt[3],
+                                        popt[4], popt[5], popt[6], popt[7],
+                                        popt[8], popt[9], popt[10], popt[11]))
+
+plt.figure()
+plt.plot(popt[4:8]*1000,centros,'.')
+
+# Ajuste lineal
+coef=np.polyfit(popt[4:8]*1000,centros,1)
+print(coef)
+plt.plot(tiempo3*1000, tiempo3*1000*coef[0]+coef[1])
+plt.ylabel('E/h [THz]')
+plt.xlabel('tiempo [ms]')
+
+# Plot con eje de frecuencia
+datos3_norm=(datos3-datos3.min())/(datos3-datos3.min()).max()
+ajust_norm=varied_gauss(tiempo3,  popt[0], popt[1], popt[2], popt[3],
+                                        popt[4], popt[5], popt[6], popt[7],
+                                        popt[8], popt[9], popt[10], popt[11])
+ajust_norm-=ajust_norm.min()
+ajust_norm/=ajust_norm.max()/0.98
+
+plt.figure()
+plt.plot(tiempo3*1000*coef[0]+coef[1],datos3_norm,label='Voltaje Normalizado')
+plt.plot(tiempo3[peaks_ind]*1000*coef[0]+coef[1],datos3_norm[peaks_ind],'.',label='Picos detectados')
+plt.plot(tiempo3*1000*coef[0]+coef[1],ajust_norm,label='Ajuste gaussiano\nE. Doppler: 500 MHz')
+plt.vlines([centros[1],centros[2]],-0.3,np.array([datos3_norm[peaks_ind[1]],datos3_norm[peaks_ind[2]]])-0.05, linestyle='dashdot')
+plt.vlines([centros[0],centros[3]],-0.6,np.array([datos3_norm[peaks_ind[0]],datos3_norm[peaks_ind[3]]])-0.05, linestyle='dashdot')
+plt.title(r'$D_2$ Line [$5^2S_{1/2} \rightarrow 5^2P_{3/2}$] of $^{87}$Rb and $^{85}$Rb')
+#plt.plot(Saltos_85Rb_aP3_2[0],unos_aP3_2[0],'or',markersize=5)
+plt.plot(Saltos_85Rb_aP3_2[1:],zeros_aP3_2[1:]+1,'^r',label=r'$\Delta E$ $^{85}$Rb [72.17%]',markersize=4)
+#plt.plot(Saltos_87Rb_aP3_2[0],unos_aP3_2[0],'og',markersize=5)
+plt.plot(Saltos_87Rb_aP3_2[1:],zeros_aP3_2[1:]+1,'^g',label=r'$\Delta E$ $^{87}$Rb [27.83%]',markersize=4)
+plt.xlabel(r'$E/h$ [THz]')
+plt.annotate('', xy=(centros[1], -0.3), xytext=(centros[2], -0.3),
+            arrowprops=dict(arrowstyle='<->'))
+plt.text(np.mean([centros[1],centros[2]]), -0.2, fr'{1000*(centros[1]-centros[2]):1.4} $\pm$ {np.mean([perr[5]*1000*np.abs(coef[0]),perr[6]*1000*np.abs(coef[0])])*1000:0.1} GHz',
+        horizontalalignment='center')
+plt.annotate('', xy=(centros[0], -0.6), xytext=(centros[3], -0.6),
+            arrowprops=dict(arrowstyle='<->'))
+plt.text(np.mean([centros[0],centros[3]]), -0.5, fr'{1000*(centros[0]-centros[3]):1.4} $\pm$ {np.mean([perr[4]*1000*np.abs(coef[0]),perr[7]*1000*np.abs(coef[0])])*1000:0.1} GHz',
+        horizontalalignment='center')
+plt.legend()
+plt.xlim([384.225,384.237])
 
 plt.show()
