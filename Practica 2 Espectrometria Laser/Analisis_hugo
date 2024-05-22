@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from scipy.signal import find_peaks
 from scipy.optimize import curve_fit
+from matplotlib import ticker
+plt.rcParams.update({'font.size': 12})
 
 folder='C:\\Users\\user\\Documents\\Fisica\\L5\\Laboratorio-5\\Practica 2 Espectrometria Laser\\dia 1\\'
 
@@ -98,9 +100,9 @@ zeros_aP3_2=np.zeros(len(Saltos_85Rb_aP3_2))
 
 plt.figure()
 plt.title(r'$D_1$ Line [$5^2S_{1/2} \rightarrow 5^2P_{1/2}$] of $^{87}$Rb and $^{85}$Rb')
-#plt.plot(Saltos_85Rb_aP1_2[0],unos_aP1_2[0],'or',markersize=5)
+#plt.plot(Saltos_85Rb_aP1_2[0],zeros_aP1_2[0],'or',markersize=5)
 plt.plot(Saltos_85Rb_aP1_2[1:],zeros_aP1_2[1:],'^r',label=r'$^{85}$Rb [72.17%]',markersize=4)
-#plt.plot(Saltos_87Rb_aP1_2[0],unos_aP1_2[0],'og',markersize=5)
+#plt.plot(Saltos_87Rb_aP1_2[0],zeros_aP1_2[0],'og',markersize=5)
 plt.plot(Saltos_87Rb_aP1_2[1:],zeros_aP1_2[1:],'^g',label=r'$^{87}$Rb [27.83%]',markersize=4)
 plt.xlabel(r'$E/h$ [THz]')
 plt.legend()
@@ -138,59 +140,92 @@ popt,pcov=curve_fit(varied_gauss,tiempo3,datos3,p0=[0.0001,0.0001,0.0001,0.0001,
                                                datos3[peaks_ind[3]]])
 perr=np.sqrt(np.diag(pcov))
 
+
+D1 = np.concatenate((Saltos_85Rb_aP1_2[1:],Saltos_87Rb_aP1_2[1:]))
 D2 = np.concatenate((Saltos_85Rb_aP3_2[1:],Saltos_87Rb_aP3_2[1:]))
-# Encuentro centroides de los 4 picos con un Clastering K-Means
-k_means = KMeans(n_clusters=4).fit(np.c_[D2,np.ones(len(D2))])
+
+# Encuentro centroides de los 4 picos con un Clastering K-Means de la linea D1
+k_means = KMeans(n_clusters=4).fit(np.c_[D1,np.ones(len(D1))])
 centros = k_means.cluster_centers_
 centros = sorted(centros[:,0],reverse=True)
 print(centros)
 
+k_means2 = KMeans(n_clusters=4).fit(np.c_[D2,np.ones(len(D2))])
+centros2 = k_means2.cluster_centers_
+centros2 = sorted(centros2[:,0],reverse=True)
+
+
 plt.figure()
 plt.plot(tiempo3,datos3)
 plt.plot(tiempo3[peaks_ind],datos3[peaks_ind],'.')
-plt.plot(tiempo3,varied_gauss(tiempo3,  popt[0], popt[1], popt[2], popt[3],
-                                        popt[4], popt[5], popt[6], popt[7],
-                                        popt[8], popt[9], popt[10], popt[11]))
+plt.plot(tiempo3,varied_gauss(tiempo3,*popt))
+
 
 plt.figure()
-plt.plot(popt[4:8]*1000,centros,'.')
-
+plt.plot(np.array([popt[5],popt[6]])*1000,np.array([centros[1],centros[2]]),'.r',label=r'$\Delta \bar{E}$ $^{85}$Rb [$D_1$]')
+plt.plot(np.array([popt[4],popt[7]])*1000,np.array([centros[0],centros[3]]),'.g',label=r'$\Delta \bar{E}$ $^{87}$Rb [$D_1$]')
+plt.gca().yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:.3f}"))
 # Ajuste lineal
 coef=np.polyfit(popt[4:8]*1000,centros,1)
 print(coef)
 plt.plot(tiempo3*1000, tiempo3*1000*coef[0]+coef[1])
 plt.ylabel('E/h [THz]')
-plt.xlabel('tiempo [ms]')
+plt.xlabel('Tiempo [ms]')
+plt.xlim([0,4])
+plt.legend()
+
+
+plt.figure()
+plt.plot(np.array([popt[5],popt[6]])*1000,np.array([centros2[1],centros2[2]]),'.r',label=r'$\Delta \bar{E}$ $^{85}$Rb [$D_2$]')
+plt.plot(np.array([popt[4],popt[7]])*1000,np.array([centros2[0],centros2[3]]),'.g',label=r'$\Delta \bar{E}$ $^{87}$Rb [$D_2$]')
+plt.gca().yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:.3f}"))
+# Ajuste lineal
+coef2=np.polyfit(popt[4:8]*1000,centros2,1)
+print(coef2)
+plt.plot(tiempo3*1000, tiempo3*1000*coef2[0]+coef2[1])
+plt.ylabel('E/h [THz]')
+plt.xlabel('Tiempo [ms]')
+plt.xlim([0,4])
+plt.legend()
+
 
 # Plot con eje de frecuencia
 datos3_norm=(datos3-datos3.min())/(datos3-datos3.min()).max()
-ajust_norm=varied_gauss(tiempo3,  popt[0], popt[1], popt[2], popt[3],
-                                        popt[4], popt[5], popt[6], popt[7],
-                                        popt[8], popt[9], popt[10], popt[11])
+ajust_norm=varied_gauss(tiempo3,*popt)
 ajust_norm-=ajust_norm.min()
 ajust_norm/=ajust_norm.max()/0.98
 
-plt.figure()
-plt.plot(tiempo3*1000*coef[0]+coef[1],datos3_norm,label='Voltaje Normalizado')
-plt.plot(tiempo3[peaks_ind]*1000*coef[0]+coef[1],datos3_norm[peaks_ind],'.',label='Picos detectados')
-plt.plot(tiempo3*1000*coef[0]+coef[1],ajust_norm,label='Ajuste gaussiano\nE. Doppler: 500 MHz')
-plt.vlines([centros[1],centros[2]],-0.3,np.array([datos3_norm[peaks_ind[1]],datos3_norm[peaks_ind[2]]])-0.05, linestyle='dashdot')
-plt.vlines([centros[0],centros[3]],-0.6,np.array([datos3_norm[peaks_ind[0]],datos3_norm[peaks_ind[3]]])-0.05, linestyle='dashdot')
-plt.title(r'$D_2$ Line [$5^2S_{1/2} \rightarrow 5^2P_{3/2}$] of $^{87}$Rb and $^{85}$Rb')
-#plt.plot(Saltos_85Rb_aP3_2[0],unos_aP3_2[0],'or',markersize=5)
-plt.plot(Saltos_85Rb_aP3_2[1:],zeros_aP3_2[1:]+1,'^r',label=r'$\Delta E$ $^{85}$Rb [72.17%]',markersize=4)
-#plt.plot(Saltos_87Rb_aP3_2[0],unos_aP3_2[0],'og',markersize=5)
-plt.plot(Saltos_87Rb_aP3_2[1:],zeros_aP3_2[1:]+1,'^g',label=r'$\Delta E$ $^{87}$Rb [27.83%]',markersize=4)
-plt.xlabel(r'$E/h$ [THz]')
-plt.annotate('', xy=(centros[1], -0.3), xytext=(centros[2], -0.3),
+fig,ax=plt.subplots()
+ax.plot(tiempo3*1000*coef[0]+coef[1],datos3_norm,label='Voltaje Normalizado')
+ax.plot(tiempo3[peaks_ind]*1000*coef[0]+coef[1],datos3_norm[peaks_ind],'.',label='Picos detectados')
+ax.plot(tiempo3*1000*coef[0]+coef[1],ajust_norm,label='Ajuste gaussiano')
+ax.vlines([centros[1],centros[2]],-0.3,np.array([datos3_norm[peaks_ind[1]],datos3_norm[peaks_ind[2]]])-0.05, linestyle='dashdot')
+ax.vlines([centros[0],centros[3]],-0.6,np.array([datos3_norm[peaks_ind[0]],datos3_norm[peaks_ind[3]]])-0.05, linestyle='dashdot')
+ax.set_title(r'$D_1$ Line [$5^2S_{1/2} \rightarrow 5^2P_{1/2}$] of $^{87}$Rb and $^{85}$Rb')
+#ax.plot(Saltos_85Rb_aP3_2[0],unos_aP3_2[0],'or',markersize=5)
+ax.plot(Saltos_85Rb_aP1_2[1:],zeros_aP1_2[1:]+1,'^r',label=r'$\Delta E$ $^{85}$Rb [72.17%]',markersize=4)
+#ax.plot(Saltos_87Rb_aP3_2[0],unos_aP3_2[0],'og',markersize=5)
+ax.plot(Saltos_87Rb_aP1_2[1:],zeros_aP1_2[1:]+1,'^g',label=r'$\Delta E$ $^{87}$Rb [27.83%]',markersize=4)
+ax.set_xlabel(r'$E/h$ [THz]')
+ax.annotate('', xy=(centros[1], -0.3), xytext=(centros[2], -0.3),
             arrowprops=dict(arrowstyle='<->'))
-plt.text(np.mean([centros[1],centros[2]]), -0.2, fr'{1000*(centros[1]-centros[2]):1.4} $\pm$ {np.mean([perr[5]*1000*np.abs(coef[0]),perr[6]*1000*np.abs(coef[0])])*1000:0.1} GHz',
+ax.text(np.mean([centros[1],centros[2]]), -0.25, fr'{1000*(centros[1]-centros[2]):1.4} $\pm$ {3*np.mean([perr[5]*1000*np.abs(coef[0]),perr[6]*1000*np.abs(coef[0])])*1000:0.1} GHz',
         horizontalalignment='center')
-plt.annotate('', xy=(centros[0], -0.6), xytext=(centros[3], -0.6),
+ax.annotate('', xy=(centros[0], -0.6), xytext=(centros[3], -0.6),
             arrowprops=dict(arrowstyle='<->'))
-plt.text(np.mean([centros[0],centros[3]]), -0.5, fr'{1000*(centros[0]-centros[3]):1.4} $\pm$ {np.mean([perr[4]*1000*np.abs(coef[0]),perr[7]*1000*np.abs(coef[0])])*1000:0.1} GHz',
+ax.text(np.mean([centros[0],centros[3]]), -0.55, fr'{1000*(centros[0]-centros[3]):1.4} $\pm$ {3*np.mean([perr[4]*1000*np.abs(coef[0]),perr[7]*1000*np.abs(coef[0])])*1000:0.1} GHz',
         horizontalalignment='center')
-plt.legend()
-plt.xlim([384.225,384.237])
+ax.legend()
+ax.set_xlim([377.1020,377.1140])
+ax.xaxis.set_major_formatter(ticker.StrMethodFormatter("{x:.3f}"))
+ax.set_yticks([])
 
+def long_onda(x):
+    return 299792458/(x*1E6)*1E3
+
+secax=ax.secondary_xaxis('top',functions=(long_onda,long_onda))
+secax.set_xlabel('$\lambda$ [nm]')
+secax.xaxis.set_major_formatter(ticker.StrMethodFormatter("{x:.3f}"))
+secax.set_xticks(long_onda(np.arange(377.1020,377.1160,0.002)))
+#plt.grid()
 plt.show()
