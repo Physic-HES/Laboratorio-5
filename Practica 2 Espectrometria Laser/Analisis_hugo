@@ -4,6 +4,7 @@ from sklearn.cluster import KMeans
 from scipy.signal import find_peaks
 from scipy.optimize import curve_fit
 from matplotlib import ticker
+import cv2
 plt.rcParams.update({'font.size': 12})
 
 folder='C:\\Users\\user\\Documents\\Fisica\\L5\\Laboratorio-5\\Practica 2 Espectrometria Laser\\dia 1\\'
@@ -159,18 +160,20 @@ plt.legend()
 
 
 plt.figure()
-plt.errorbar(np.array([popt[5],popt[6]])*1000,np.array([centros[1],centros[2]]),yerr=np.array([des[1],des[2]]), marker='.', mfc='red',ls='',label=r'$\Delta \bar{E}$ $^{85}$Rb [$D_1$]')
-plt.errorbar(np.array([popt[4],popt[7]])*1000,np.array([centros[0],centros[3]]),yerr=np.array([des[0],des[3]]), marker='.', mfc='green',ls='',label=r'$\Delta \bar{E}$ $^{87}$Rb [$D_1$]')
+plt.errorbar(np.array([popt[5],popt[6]])*1000,np.array([centros[1],centros[2]]),yerr=np.array([des[1],des[2]]), marker='^', mfc='red', mec='red',ecolor='red',ls='',label=r'$\Delta \bar{E}$ $^{85}$Rb [$D_1$]')
+plt.errorbar(np.array([popt[4],popt[7]])*1000,np.array([centros[0],centros[3]]),yerr=np.array([des[0],des[3]]), marker='^', mfc='green', mec='green',ecolor='green',ls='',label=r'$\Delta \bar{E}$ $^{87}$Rb [$D_1$]')
 plt.gca().yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:.3f}"))
 # Ajuste lineal
 coef=np.polyfit(popt[4:8]*1000,centros,1)
 print(coef)
-plt.plot(tiempo3*1000, tiempo3*1000*coef[0]+coef[1])
+plt.plot(tiempo3*1000, tiempo3*1000*coef[0]+coef[1],'-b',label='Ajuste lineal')
+plt.ylim([377.103,377.113])
+plt.xlim([0.5,4])
+plt.yticks(rotation = 90,va='center')
+plt.text(plt.gca().get_xlim()[0]+0.5,plt.gca().get_ylim()[0]+0.001,f'E/h={coef[0]:.2}·t+{coef[1]:.6}')
 plt.ylabel('E/h [THz]')
 plt.xlabel('Tiempo [ms]')
-plt.xlim([0,4])
 plt.legend()
-
 
 
 # Plot con eje de frecuencia
@@ -232,4 +235,76 @@ secax.set_xlabel('Longitud de onda $\lambda$ [nm]')
 secax.xaxis.set_major_formatter(ticker.StrMethodFormatter("{x:.3f}"))
 secax.set_xticks(long_onda(np.arange(377.1020,377.1160,0.002)))
 #plt.grid()
+
+
+# CON CAMPO MAGNETICO
+tiempo5,datos5_1,datos5_2,resta=np.genfromtxt(folder+'Captura_3_resta_offset_correc.txt',delimiter=',',skip_header=1,unpack=True)
+tiempo5_3,datos5_3=np.genfromtxt(folder+'Captura_3_resta_detector.txt',delimiter=',',skip_header=1,unpack=True)
+resta*=-1
+
+# Ajuste de los datos con varied_gauss
+popt,pcov=curve_fit(varied_gauss,tiempo5,datos5_1,p0=[0.0001,0.0001,0.0001,0.0001,
+                                                    0.0009,
+                                                    0.0017,
+                                                    0.00261,
+                                                    0.00309,
+                                                    0.02,
+                                                    0.02,
+                                                    0.02,
+                                                    0.02,1,1])
+perr=np.sqrt(np.diag(pcov))
+datos5_1_fit=varied_gauss(tiempo5,*popt)
+datos5_1-=(popt[-2]*tiempo5+popt[-1])
+datos5_1_fit-=(popt[-2]*tiempo5+popt[-1])
+popt,pcov=curve_fit(varied_gauss,tiempo5,datos5_2,p0=[0.0001,0.0001,0.0001,0.0001,
+                                                    0.0009,
+                                                    0.0017,
+                                                    0.00261,
+                                                    0.00309,
+                                                    0.02,
+                                                    0.02,
+                                                    0.02,
+                                                    0.02,1,1])
+perr=np.sqrt(np.diag(pcov))
+datos5_2_fit=varied_gauss(tiempo5,*popt)
+datos5_2-=(popt[-2]*tiempo5+popt[-1])
+datos5_2_fit-=(popt[-2]*tiempo5+popt[-1])
+
+plt.figure()
+plt.plot(tiempo5,datos5_1,label='Canal 1')
+plt.plot(tiempo5,datos5_1_fit,'--',label='Canal 1 fit')
+plt.plot(tiempo5,datos5_2,label='Canal 2')
+plt.plot(tiempo5,datos5_2_fit,'--',label='Canal 1 fit')
+plt.plot(tiempo5,resta,label='Resta')
+#plt.plot(tiempo5,datos5_2-datos5_1,label='Resta 1-2')
+#plt.plot(tiempo5_3,datos5_3,label='Resta detector')
+
+'''
+ind_p1_resta=find_peaks(resta,distance=150,prominence=0.001)[0]
+ind_p2_resta=find_peaks(-resta,distance=150,prominence=0.001)[0]
+
+ind_p1_restaD=find_peaks(datos5_3,distance=150,prominence=0.009)[0]
+ind_p2_restaD=find_peaks(-datos5_3,distance=150,prominence=0.009)[0]
+print(f'ultimo pico restaD: {ind_p2_restaD}')
+plt.plot([tiempo5[ind_p1_resta],tiempo5[ind_p2_resta]],[resta[ind_p1_resta],resta[ind_p2_resta]],'.',label='picos_resta')
+plt.plot([tiempo5_3[ind_p1_restaD],tiempo5_3[ind_p2_restaD]],[datos5_3[ind_p1_restaD],datos5_3[ind_p2_restaD]],'.',label='picos_restaD')
+
+picos_resta_x=np.concatenate((tiempo5[ind_p1_resta],tiempo5[ind_p2_resta]))
+picos_resta_y=np.concatenate((resta[ind_p1_resta],resta[ind_p2_resta]))
+picos_resta=np.c_[picos_resta_x,picos_resta_y]
+picos_restaD_x=np.concatenate((tiempo5_3[ind_p1_restaD],tiempo5_3[ind_p2_restaD]))
+picos_restaD_y=np.concatenate((datos5_3[ind_p1_restaD],datos5_3[ind_p2_restaD]))
+picos_restaD=np.c_[picos_restaD_x,picos_restaD_y]
+
+RT= cv2.getAffineTransform((picos_restaD[np.arange(1,7,2),:]).astype(np.float32), (picos_resta[np.arange(1,7,2),:]).astype(np.float32))
+picos_restaD_alin=np.dot(RT[:,0:2],np.vstack((tiempo5_3,datos5_3))).T+np.c_[(RT[:,-1])[0]*np.ones(len(tiempo5_3)),(RT[:,-1])[1]*np.ones(len(tiempo5_3))]
+plt.plot(picos_restaD_alin[:,0],picos_restaD_alin[:,1],'-b',label='Resta detector corregida')
+'''
+
+pbajos=500
+datos5_resta_filtrada=np.real(np.fft.ifft(np.fft.fft(datos5_2-datos5_1)*np.hstack((np.ones(pbajos),np.zeros(len(datos5_3)-2*pbajos),np.ones(pbajos)))))
+plt.plot(tiempo5,datos5_resta_filtrada,label='Resta 1-2 con filtro fft')
+
+plt.legend()
+
 plt.show()
