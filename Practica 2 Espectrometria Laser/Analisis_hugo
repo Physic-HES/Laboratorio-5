@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from scipy.signal import find_peaks
 from scipy.optimize import curve_fit
+from scipy.signal import argrelmin
 from matplotlib import ticker
 import cv2
 plt.rcParams.update({'font.size': 12})
@@ -150,9 +151,9 @@ centros2 = sorted(centros2[:,0],reverse=True)
 des2 = desv(k_means2,D2)
 
 plt.figure()
-plt.plot(tiempo3*1000,datos3*1000,label='Fotodetector')
-plt.plot(tiempo3[peaks_ind]*1000,datos3[peaks_ind]*1000,'.',label='Picos detectados')
+plt.plot(tiempo3*1000,datos3*1000,label=r'Fotodetector $FD$')
 plt.plot(tiempo3*1000,varied_gauss(tiempo3,*popt)*1000,label='Ajuste gaussiano')
+plt.plot(tiempo3[peaks_ind]*1000,datos3[peaks_ind]*1000,'.',label='Picos detectados')
 plt.ylabel('Voltaje [mV]')
 plt.xlabel('Tiempo [ms]')
 plt.xlim([0,4])
@@ -185,16 +186,17 @@ ajust_norm-=ajust_norm.min()
 ajust_norm/=ajust_norm.max()/0.98
 
 fig,ax=plt.subplots()
-ax.plot(tiempo3*1000*coef[0]+coef[1],datos3_norm,label='Absorción Normalizada')
-ax.plot(tiempo3[peaks_ind]*1000*coef[0]+coef[1],datos3_norm[peaks_ind],'.',label='Picos detectados')
+ax.plot(tiempo3*1000*coef[0]+coef[1],datos3_norm,label=r'Fotodetector $FD$')
 ax.plot(tiempo3*1000*coef[0]+coef[1],ajust_norm,label='Ajuste gaussiano')
-ax.vlines([centros[1],centros[2]],-0.3,np.array([datos3_norm[peaks_ind[1]],datos3_norm[peaks_ind[2]]])-0.05, linestyle='dashdot')
-ax.vlines([centros[0],centros[3]],-0.6,np.array([datos3_norm[peaks_ind[0]],datos3_norm[peaks_ind[3]]])-0.05, linestyle='dashdot')
+ax.plot(tiempo3[peaks_ind]*1000*coef[0]+coef[1],datos3_norm[peaks_ind],'.k',label='Picos detectados')
+ax.vlines([centros[1],centros[2]],-0.3,np.array([datos3_norm[peaks_ind[1]],datos3_norm[peaks_ind[2]]])-0.05, linestyle='dashdot',color='gray')
+ax.vlines([centros[0],centros[3]],-0.6,np.array([datos3_norm[peaks_ind[0]],datos3_norm[peaks_ind[3]]])-0.05, linestyle='dashdot',color='gray')
 #ax.plot(Saltos_85Rb_aP3_2[0],unos_aP3_2[0],'or',markersize=5)
 ax.plot(Saltos_85Rb_aP1_2[1:],zeros_aP1_2[1:]+1,'^r',label=r'$\Delta E$ $^{85}$Rb $D_1$[$5^2S_{1/2} \rightarrow 5^2P_{1/2}$]'+'\nAbundancia 72.17%',markersize=4)
 #ax.plot(Saltos_87Rb_aP3_2[0],unos_aP3_2[0],'og',markersize=5)
 ax.plot(Saltos_87Rb_aP1_2[1:],zeros_aP1_2[1:]+1,'^g',label=r'$\Delta E$ $^{87}$Rb $D_1$[$5^2S_{1/2} \rightarrow 5^2P_{1/2}$]'+'\nAbundancia 27.83%',markersize=4)
 ax.set_xlabel(r'Frecuencia $E/h$ [THz]')
+ax.set_ylabel('Absorción Normalizada')
 ax.annotate('', xy=(centros[1], -0.3), xytext=(centros[2], -0.3),
             arrowprops=dict(arrowstyle='<->'))
 ax.text(np.mean([centros[1],centros[2]]), -0.25, fr'{1000*(centros[1]-centros[2]):1.4} $\pm$ {3*np.mean([perr[5]*1000*np.abs(coef[0]),perr[6]*1000*np.abs(coef[0])])*1000:0.1} GHz',
@@ -234,8 +236,6 @@ secax=ax.secondary_xaxis('top',functions=(long_onda,long_onda))
 secax.set_xlabel('Longitud de onda $\lambda$ [nm]')
 secax.xaxis.set_major_formatter(ticker.StrMethodFormatter("{x:.3f}"))
 secax.set_xticks(long_onda(np.arange(377.1020,377.1160,0.002)))
-#plt.grid()
-
 
 # CON CAMPO MAGNETICO
 tiempo5,datos5_1,datos5_2,resta=np.genfromtxt(folder+'Captura_3_resta_offset_correc.txt',delimiter=',',skip_header=1,unpack=True)
@@ -243,7 +243,7 @@ tiempo5_3,datos5_3=np.genfromtxt(folder+'Captura_3_resta_detector.txt',delimiter
 resta*=-1
 
 # Ajuste de los datos con varied_gauss
-popt,pcov=curve_fit(varied_gauss,tiempo5,datos5_1,p0=[0.0001,0.0001,0.0001,0.0001,
+popt1,pcov1=curve_fit(varied_gauss,tiempo5,datos5_1,p0=[0.0001,0.0001,0.0001,0.0001,
                                                     0.0009,
                                                     0.0017,
                                                     0.00261,
@@ -252,59 +252,133 @@ popt,pcov=curve_fit(varied_gauss,tiempo5,datos5_1,p0=[0.0001,0.0001,0.0001,0.000
                                                     0.02,
                                                     0.02,
                                                     0.02,1,1])
-perr=np.sqrt(np.diag(pcov))
-datos5_1_fit=varied_gauss(tiempo5,*popt)
-datos5_1-=(popt[-2]*tiempo5+popt[-1])
-datos5_1_fit-=(popt[-2]*tiempo5+popt[-1])
-popt,pcov=curve_fit(varied_gauss,tiempo5,datos5_2,p0=[0.0001,0.0001,0.0001,0.0001,
-                                                    0.0009,
-                                                    0.0017,
-                                                    0.00261,
-                                                    0.00309,
-                                                    0.02,
-                                                    0.02,
-                                                    0.02,
-                                                    0.02,1,1])
-perr=np.sqrt(np.diag(pcov))
-datos5_2_fit=varied_gauss(tiempo5,*popt)
-datos5_2-=(popt[-2]*tiempo5+popt[-1])
-datos5_2_fit-=(popt[-2]*tiempo5+popt[-1])
+perr1=np.sqrt(np.diag(pcov1))
+datos5_1_fit=varied_gauss(tiempo5,*popt1)
 
+popt2,pcov2=curve_fit(varied_gauss,tiempo5,datos5_2,p0=[0.0001,0.0001,0.0001,0.0001,
+                                                    0.0009,
+                                                    0.0017,
+                                                    0.00261,
+                                                    0.00309,
+                                                    0.02,
+                                                    0.02,
+                                                    0.02,
+                                                    0.02,1,1])
+perr2=np.sqrt(np.diag(pcov2))
+datos5_2_fit=varied_gauss(tiempo5,*popt2)
+
+# Plot señales crudas
 plt.figure()
-plt.plot(tiempo5,datos5_1,label='Canal 1')
-plt.plot(tiempo5,datos5_1_fit,'--',label='Canal 1 fit')
-plt.plot(tiempo5,datos5_2,label='Canal 2')
-plt.plot(tiempo5,datos5_2_fit,'--',label='Canal 1 fit')
-plt.plot(tiempo5,resta,label='Resta')
-#plt.plot(tiempo5,datos5_2-datos5_1,label='Resta 1-2')
-#plt.plot(tiempo5_3,datos5_3,label='Resta detector')
-
-'''
-ind_p1_resta=find_peaks(resta,distance=150,prominence=0.001)[0]
-ind_p2_resta=find_peaks(-resta,distance=150,prominence=0.001)[0]
-
-ind_p1_restaD=find_peaks(datos5_3,distance=150,prominence=0.009)[0]
-ind_p2_restaD=find_peaks(-datos5_3,distance=150,prominence=0.009)[0]
-print(f'ultimo pico restaD: {ind_p2_restaD}')
-plt.plot([tiempo5[ind_p1_resta],tiempo5[ind_p2_resta]],[resta[ind_p1_resta],resta[ind_p2_resta]],'.',label='picos_resta')
-plt.plot([tiempo5_3[ind_p1_restaD],tiempo5_3[ind_p2_restaD]],[datos5_3[ind_p1_restaD],datos5_3[ind_p2_restaD]],'.',label='picos_restaD')
-
-picos_resta_x=np.concatenate((tiempo5[ind_p1_resta],tiempo5[ind_p2_resta]))
-picos_resta_y=np.concatenate((resta[ind_p1_resta],resta[ind_p2_resta]))
-picos_resta=np.c_[picos_resta_x,picos_resta_y]
-picos_restaD_x=np.concatenate((tiempo5_3[ind_p1_restaD],tiempo5_3[ind_p2_restaD]))
-picos_restaD_y=np.concatenate((datos5_3[ind_p1_restaD],datos5_3[ind_p2_restaD]))
-picos_restaD=np.c_[picos_restaD_x,picos_restaD_y]
-
-RT= cv2.getAffineTransform((picos_restaD[np.arange(1,7,2),:]).astype(np.float32), (picos_resta[np.arange(1,7,2),:]).astype(np.float32))
-picos_restaD_alin=np.dot(RT[:,0:2],np.vstack((tiempo5_3,datos5_3))).T+np.c_[(RT[:,-1])[0]*np.ones(len(tiempo5_3)),(RT[:,-1])[1]*np.ones(len(tiempo5_3))]
-plt.plot(picos_restaD_alin[:,0],picos_restaD_alin[:,1],'-b',label='Resta detector corregida')
-'''
-
-pbajos=500
-datos5_resta_filtrada=np.real(np.fft.ifft(np.fft.fft(datos5_2-datos5_1)*np.hstack((np.ones(pbajos),np.zeros(len(datos5_3)-2*pbajos),np.ones(pbajos)))))
-plt.plot(tiempo5,datos5_resta_filtrada,label='Resta 1-2 con filtro fft')
-
+plt.plot(tiempo5*1E3,datos5_1*1E3,label=r'Fotodetector $FD_1$')
+plt.plot(tiempo5*1E3,datos5_2*1E3,label=r'Fotodetector $FD_2$')
+plt.plot(tiempo5*1E3,datos5_1_fit*1E3,label=r'Ajuste gaussiano $FD_1$')
+plt.plot(tiempo5*1E3,datos5_2_fit*1E3,label=r'Ajuste gaussiano $FD_2$')
+plt.ylabel('Voltaje [mV]')
+plt.xlabel('Tiempo [ms]')
+plt.xlim([0,4])
 plt.legend()
+
+# Elimino rampas
+datos5_1-=(popt1[-2]*tiempo5+popt1[-1])
+datos5_1_fit-=(popt1[-2]*tiempo5+popt1[-1])
+datos5_2-=(popt2[-2]*tiempo5+popt2[-1])
+datos5_2_fit-=(popt2[-2]*tiempo5+popt2[-1])
+
+def filt_fft(tiempo,datos,freq): # Defino funcion de filtro pasa bajos
+    pbajos=int(freq*tiempo[-1])
+    return np.real(np.fft.ifft(np.fft.fft(datos)*np.hstack((np.ones(pbajos),np.zeros(len(datos)-2*pbajos),np.ones(pbajos)))))
+
+# ajusto amplitudes del canal 1 para que se parezcan en amplitud a los picos de absorcion del canal 2
+datos5_1*=(1-datos5_1*17.5)
+
+# Busco ceros en la resta canal 1 menos canal 2
+ind_ceros=find_peaks(np.diff(np.sign(filt_fft(tiempo5,datos5_1-datos5_2,16.5E3))),distance=150,prominence=0.0005)[0][1:5]
+print(ind_ceros)
+
+# Normalizo ambos canales
+datos5_2-=datos5_2.min()
+datos5_2/=datos5_2.max()
+
+datos5_1-=datos5_1.min()
+datos5_1/=datos5_1.max()
+# Obtengo la resta filtrada de las señales ya normalizadas
+datos5_resta_filtrada=filt_fft(tiempo5,datos5_1-datos5_2,106.5E3)
+
+# Ajuste lineal para pasar de tiempo a frecuencia
+coef2=np.polyfit(tiempo5[ind_ceros]*1000,centros,1)
+E_h=tiempo5*1000*coef2[0]+coef2[1]
+
+# Ploteo el ajuste lineal junto con los delta F del Rubidio
+plt.figure()
+plt.errorbar(np.array([tiempo5[ind_ceros[1]],tiempo5[ind_ceros[2]]])*1000,
+             np.array([centros[1],centros[2]]),yerr=np.array([des[1],des[2]]), marker='^',
+               mfc='red', mec='red',ecolor='red',ls='',label=r'$\Delta \bar{E}$ $^{85}$Rb [$D_1$]')
+plt.errorbar(np.array([tiempo5[ind_ceros[0]],tiempo5[ind_ceros[3]]])*1000,
+             np.array([centros[0],centros[3]]),yerr=np.array([des[0],des[3]]), marker='^',
+               mfc='green', mec='green',ecolor='green',ls='',label=r'$\Delta \bar{E}$ $^{87}$Rb [$D_1$]')
+plt.gca().yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:.3f}"))
+plt.plot(tiempo5*1000, E_h,'-b',label='Ajuste lineal')
+plt.ylim([377.103,377.113])
+plt.xlim([0.5,4])
+plt.yticks(rotation = 90,va='center')
+plt.text(plt.gca().get_xlim()[0]+0.5,plt.gca().get_ylim()[0]+0.001,f'E/h={coef2[0]:.2}·t+{coef2[1]:.6}')
+plt.ylabel('E/h [THz]')
+plt.xlabel('Tiempo [ms]')
+plt.legend()
+
+
+# Ploteo los FD con campo B junto con una medicion sin B
+fig2,ax2=plt.subplots()
+ax2.plot(tiempo3*1000*coef[0]+coef[1],datos3_norm,label=r'$FD$ sin $\vec{B}$')
+ax2.vlines([centros[1],centros[2]],-0.3,np.array([2.2,2.2])-0.05, linestyle='dashdot',color='gray')
+ax2.vlines([centros[0],centros[3]],-0.6,np.array([2.2,2.2])-0.05, linestyle='dashdot',color='gray')
+ax2.plot(Saltos_85Rb_aP1_2[1:],zeros_aP1_2[1:]+1,'^r',markersize=4)
+ax2.plot(Saltos_87Rb_aP1_2[1:],zeros_aP1_2[1:]+1,'^g',markersize=4)
+ax2.set_xlabel(r'Frecuencia $E/h$ [THz]')
+ax2.set_ylabel('Absorción Normalizada')
+# Anotaciones
+ax2.annotate('', xy=(centros[1], -0.3), xytext=(centros[2], -0.3),
+            arrowprops=dict(arrowstyle='<->'))
+ax2.text(np.mean([centros[1],centros[2]]), -0.25, fr'{1000*(centros[1]-centros[2]):1.4} $\pm$ {3*np.mean([perr[5]*1000*np.abs(coef[0]),perr[6]*1000*np.abs(coef[0])])*1000:0.1} GHz',
+        horizontalalignment='center')
+ax2.annotate('', xy=(centros[0], -0.6), xytext=(centros[3], -0.6),
+            arrowprops=dict(arrowstyle='<->'))
+ax2.annotate(r'$\Delta F_{(2,1^\prime)}$', xy=(Saltos_85Rb_aP1_2[1], 0.98), xytext=(Saltos_85Rb_aP1_2[1], 0.85),
+            arrowprops=dict(arrowstyle='->'),ha='center')
+ax2.annotate(r'$\Delta F_{(1,1^\prime)}$', xy=(Saltos_85Rb_aP1_2[2], 0.98), xytext=(Saltos_85Rb_aP1_2[2], 0.7),
+            arrowprops=dict(arrowstyle='->'),ha='center')
+ax2.annotate(r'$\Delta F_{(1,2^\prime)}$', xy=(Saltos_85Rb_aP1_2[3], 0.98), xytext=(Saltos_85Rb_aP1_2[3], 0.85),
+            arrowprops=dict(arrowstyle='->'),ha='center')
+ax2.annotate(r'$\Delta F_{(2,2^\prime)}$', xy=(Saltos_85Rb_aP1_2[4], 0.98), xytext=(Saltos_85Rb_aP1_2[4], 0.7),
+            arrowprops=dict(arrowstyle='->'),ha='center')
+ax2.annotate(r'$\Delta F_{(2,1^\prime)}$', xy=(Saltos_87Rb_aP1_2[1], 1.02), xytext=(Saltos_87Rb_aP1_2[1], 1.15),
+            arrowprops=dict(arrowstyle='->'),ha='center')
+ax2.annotate(r'$\Delta F_{(1,1^\prime)}$', xy=(Saltos_87Rb_aP1_2[2], 1.02), xytext=(Saltos_87Rb_aP1_2[2], 1.15),
+            arrowprops=dict(arrowstyle='->'),ha='center')
+ax2.annotate(r'$\Delta F_{(1,2^\prime)}$', xy=(Saltos_87Rb_aP1_2[3], 1.02), xytext=(Saltos_87Rb_aP1_2[3], 1.15),
+            arrowprops=dict(arrowstyle='->'),ha='center')
+ax2.annotate(r'$\Delta F_{(2,2^\prime)}$', xy=(Saltos_87Rb_aP1_2[4], 1.02), xytext=(Saltos_87Rb_aP1_2[4], 1.15),
+            arrowprops=dict(arrowstyle='->'),ha='center')
+ax2.text(np.mean([centros[0],centros[3]]), -0.55, fr'{1000*(centros[0]-centros[3]):1.4} $\pm$ {3*np.mean([perr[4]*1000*np.abs(coef[0]),perr[7]*1000*np.abs(coef[0])])*1000:0.1} GHz',
+        horizontalalignment='center')
+
+ax2.text(377.102+0.0001, 1.05, r'Sin campo magnético $\vec{B}$')
+ax2.text(377.102+0.0001, 2.25, r'Con campo magnético $\vec{B}$')
+
+ax2.set_xlim([377.1020,377.1140])
+ax2.set_ylim([-0.75,2.5])
+ax2.xaxis.set_major_formatter(ticker.StrMethodFormatter("{x:.3f}"))
+ax2.set_yticks([])
+
+secax2=ax2.secondary_xaxis('top',functions=(long_onda,long_onda))
+secax2.set_xlabel('Longitud de onda $\lambda$ [nm]')
+secax2.xaxis.set_major_formatter(ticker.StrMethodFormatter("{x:.3f}"))
+secax2.set_xticks(long_onda(np.arange(377.1020,377.1160,0.002)))
+
+ax2.plot(E_h,datos5_1+1.2,label=r'$FD_1$ con $\vec{B}$')
+ax2.plot(E_h,datos5_2+1.2,label=r'$FD_2$ con $\vec{B}$')
+ax2.plot(E_h,datos5_resta_filtrada+2.2,label=r'Dif $FD_1-FD_2$')
+ax2.plot(E_h[ind_ceros],datos5_resta_filtrada[ind_ceros]+2.2,'dm',label='Ceros')
+ax2.legend()
 
 plt.show()
