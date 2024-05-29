@@ -161,8 +161,10 @@ plt.legend()
 
 
 plt.figure()
-plt.errorbar(np.array([popt[5],popt[6]])*1000,np.array([centros[1],centros[2]]),yerr=np.array([des[1],des[2]]), marker='^', mfc='red', mec='red',ecolor='red',ls='',label=r'$\Delta \bar{E}$ $^{85}$Rb [$D_1$]')
-plt.errorbar(np.array([popt[4],popt[7]])*1000,np.array([centros[0],centros[3]]),yerr=np.array([des[0],des[3]]), marker='^', mfc='green', mec='green',ecolor='green',ls='',label=r'$\Delta \bar{E}$ $^{87}$Rb [$D_1$]')
+plt.errorbar(np.array([popt[5],popt[6]])*1000,np.array([centros[1],centros[2]]),yerr=np.array([des[1],des[2]]), 
+             marker='^', mfc='red', mec='red',ecolor='red',ls='',label=r'$\Delta \bar{E}$ $^{85}$Rb [$D_1$]')
+plt.errorbar(np.array([popt[4],popt[7]])*1000,np.array([centros[0],centros[3]]),yerr=np.array([des[0],des[3]]), 
+             marker='^', mfc='green', mec='green',ecolor='green',ls='',label=r'$\Delta \bar{E}$ $^{87}$Rb [$D_1$]')
 plt.gca().yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:.3f}"))
 # Ajuste lineal
 coef=np.polyfit(popt[4:8]*1000,centros,1)
@@ -192,9 +194,9 @@ ax.plot(tiempo3[peaks_ind]*1000*coef[0]+coef[1],datos3_norm[peaks_ind],'.k',labe
 ax.vlines([centros[1],centros[2]],-0.3,np.array([datos3_norm[peaks_ind[1]],datos3_norm[peaks_ind[2]]])-0.05, linestyle='dashdot',color='gray')
 ax.vlines([centros[0],centros[3]],-0.6,np.array([datos3_norm[peaks_ind[0]],datos3_norm[peaks_ind[3]]])-0.05, linestyle='dashdot',color='gray')
 #ax.plot(Saltos_85Rb_aP3_2[0],unos_aP3_2[0],'or',markersize=5)
-ax.plot(Saltos_85Rb_aP1_2[1:],zeros_aP1_2[1:]+1,'^r',label=r'$\Delta E$ $^{85}$Rb $D_1$[$5^2S_{1/2} \rightarrow 5^2P_{1/2}$]'+'\nAbundancia 72.17%',markersize=4)
+ax.plot(Saltos_85Rb_aP1_2[1:],zeros_aP1_2[1:]+1,'^r',label=r'$\Delta E$ $^{85}$Rb$_{D1}$',markersize=4)
 #ax.plot(Saltos_87Rb_aP3_2[0],unos_aP3_2[0],'og',markersize=5)
-ax.plot(Saltos_87Rb_aP1_2[1:],zeros_aP1_2[1:]+1,'^g',label=r'$\Delta E$ $^{87}$Rb $D_1$[$5^2S_{1/2} \rightarrow 5^2P_{1/2}$]'+'\nAbundancia 27.83%',markersize=4)
+ax.plot(Saltos_87Rb_aP1_2[1:],zeros_aP1_2[1:]+1,'^g',label=r'$\Delta E$ $^{87}$Rb$_{D1}$',markersize=4)
 ax.set_xlabel(r'Frecuencia $E/h$ [THz]')
 ax.set_ylabel('Absorción Normalizada')
 ax.annotate('', xy=(centros[1], -0.3), xytext=(centros[2], -0.3),
@@ -362,8 +364,8 @@ ax2.annotate(r'$\Delta F_{(2,2^\prime)}$', xy=(Saltos_87Rb_aP1_2[4], 1.02), xyte
 ax2.text(np.mean([centros[0],centros[3]]), -0.55, fr'{1000*(centros[0]-centros[3]):1.4} $\pm$ {3*np.mean([perr[4]*1000*np.abs(coef[0]),perr[7]*1000*np.abs(coef[0])])*1000:0.1} GHz',
         horizontalalignment='center')
 
-ax2.text(377.102+0.0001, 1.05, r'Sin campo magnético $\vec{B}$')
-ax2.text(377.102+0.0001, 2.25, r'Con campo magnético $\vec{B}$')
+ax2.text(377.102+0.0001, 1.05, r'Sin campo $\vec{B}$')
+ax2.text(377.102+0.0001, 2.25, r'Con campo $\vec{B}$')
 
 ax2.set_xlim([377.1020,377.1140])
 ax2.set_ylim([-0.75,2.5])
