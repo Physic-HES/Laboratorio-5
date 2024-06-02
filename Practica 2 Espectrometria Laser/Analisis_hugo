@@ -5,10 +5,10 @@ from scipy.signal import find_peaks
 from scipy.optimize import curve_fit
 from scipy.signal import argrelmin
 from matplotlib import ticker
-import cv2
 plt.rcParams.update({'font.size': 12})
+import pandas as pd
 
-folder='C:\\Users\\user\\Documents\\Fisica\\L5\\Laboratorio-5\\Practica 2 Espectrometria Laser\\dia 1\\'
+folder='/home/hugo_sosa/Documents/L5/Laboratorio-5/Practica 2 Espectrometria Laser/dia 1/'
 
 
 # ESTRUCTURA FINA Rubidio 87
@@ -125,6 +125,17 @@ popt,pcov=curve_fit(varied_gauss,tiempo3,datos3,p0=[0.0001,0.0001,0.0001,0.0001,
                                                datos3[peaks_ind[3]],1,1])
 perr=np.sqrt(np.diag(pcov))
 
+print('AJUSTE GAUSSIANO SIN CAMPO B')
+tabla_ajustes_0=pd.DataFrame({'Semiancho de Gaussianas': [popt[0],popt[1],popt[2],popt[3]],
+                             'Errores de semiancho': [perr[0],perr[1],perr[2],perr[3]],
+                             'Centros de Gaussianas': [popt[4],popt[5],popt[6],popt[7]],
+                             'Errores de centro': [perr[4],perr[5],perr[6],perr[7]],
+                             'Amplitud de gaussiana': [popt[8],popt[9],popt[10],popt[11]],
+                             'Errores de amplitud': [perr[8],perr[9],perr[10],perr[11]],
+                             'Pendiente y Ord. al origen': [popt[12],popt[13],' ',' '],
+                             'Errores de Pend. y Ord.': [perr[12],perr[13],' ',' ']})
+print(tabla_ajustes_0)
+tabla_ajustes_0.to_csv('tabla_ajustes_sinB.txt', index=None, sep='\t', mode='a')
 
 D1 = np.concatenate((Saltos_85Rb_aP1_2[1:],Saltos_87Rb_aP1_2[1:]))
 D2 = np.concatenate((Saltos_85Rb_aP3_2[1:],Saltos_87Rb_aP3_2[1:]))
@@ -257,6 +268,18 @@ popt1,pcov1=curve_fit(varied_gauss,tiempo5,datos5_1,p0=[0.0001,0.0001,0.0001,0.0
 perr1=np.sqrt(np.diag(pcov1))
 datos5_1_fit=varied_gauss(tiempo5,*popt1)
 
+print('AJUSTES GAUSSIANOS CON CAMPO B')
+tabla_ajustes_1=pd.DataFrame({'Semiancho de Gaussianas': [popt1[0],popt1[1],popt1[2],popt1[3]],
+                             'Errores de semiancho': [perr1[0],perr1[1],perr1[2],perr1[3]],
+                             'Centros de Gaussianas': [popt1[4],popt1[5],popt1[6],popt1[7]],
+                             'Errores de centros': [perr1[4],perr1[5],perr1[6],perr1[7]],
+                             'Amplitud de gaussiana': [popt1[8],popt1[9],popt1[10],popt1[11]],
+                             'Errores de amplitud': [perr1[8],perr1[9],perr1[10],perr1[11]],
+                             'Pendiente y Ord. al origen': [popt1[12],popt1[13],' ',' '],
+                             'Errores de Pend. y Ord.': [perr1[12],perr1[13],' ',' ']})
+print(tabla_ajustes_1)
+tabla_ajustes_1.to_csv('tabla_ajustes_conB_FD1.txt', index=None, sep='\t', mode='a')
+
 popt2,pcov2=curve_fit(varied_gauss,tiempo5,datos5_2,p0=[0.0001,0.0001,0.0001,0.0001,
                                                     0.0009,
                                                     0.0017,
@@ -268,6 +291,17 @@ popt2,pcov2=curve_fit(varied_gauss,tiempo5,datos5_2,p0=[0.0001,0.0001,0.0001,0.0
                                                     0.02,1,1])
 perr2=np.sqrt(np.diag(pcov2))
 datos5_2_fit=varied_gauss(tiempo5,*popt2)
+
+tabla_ajustes_2=pd.DataFrame({'Semiancho de Gaussianas': [popt2[0],popt2[1],popt2[2],popt2[3]],
+                             'Errores de semiancho': [perr2[0],perr2[1],perr2[2],perr2[3]],
+                             'Centros de Gaussianas': [popt2[4],popt2[5],popt2[6],popt2[7]],
+                             'Errores de centros': [perr2[4],perr2[5],perr2[6],perr2[7]],
+                             'Amplitud de gaussiana': [popt2[8],popt2[9],popt2[10],popt2[11]],
+                             'Errores de amplitud': [perr2[8],perr2[9],perr2[10],perr2[11]],
+                             'Pendiente y Ord. al origen': [popt2[12],popt2[13],' ',' '],
+                             'Errores de Pend. y Ord.': [perr2[12],perr2[13],' ',' ']})
+print(tabla_ajustes_2)
+tabla_ajustes_2.to_csv('tabla_ajustes_conB_FD2.txt', index=None, sep='\t', mode='a')
 
 # Plot señales crudas
 plt.figure()
